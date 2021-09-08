@@ -2,10 +2,20 @@ require("dotenv").config()
 const express = require("express")
 const bodyParser = require("body-parser")
 const puppeteer = require('puppeteer')
+//const openvpnmanager = require('node-openvpn')
 
 const router = express.Router()
 const app = express()
-const { PORT } = process.env
+const { PORT, vpnUserName, vpnPassword } = process.env
+// const options = {
+//   host: '127.0.0.1',
+//   port: 1337,
+//   timeout: 1500
+// }
+// const auth = {
+//   user: vpnPassword,
+//   pass: vpnPassword
+// }
 
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
@@ -18,17 +28,18 @@ router.get("/", (req, res) => {
 router.post("/", async (req, res) => {
   const url = req.body.url
   const numberOfClick = req.body.numberOfClick
-  const browser = await puppeteer.launch()
-    
+  const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
+  //const openvpn = openvpnmanager.connect(options)
   console.log(url, numberOfClick)
+
   for (let click = 0; click < numberOfClick; click++) {
     const page = await browser.newPage()
-    await page.goto(url, {waitUntil: "domcontentloaded"})
-    console.log(`this is the ${click} to the url ${url}`)
+    await page.goto(url, {waitUntil: "load"})
+    await page.close()
+    console.log(click)
   }
 
-  await browser.close()
-  res.json(`you made ${numberOfClick}'s to ${url}`)
+  res.json(`you made ${numberOfClick} clicks to ${url}`)
 })
 
 app.listen(PORT, async () => {
